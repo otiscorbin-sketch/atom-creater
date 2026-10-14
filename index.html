@@ -1,0 +1,144 @@
+﻿import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+from matplotlib.animation import FuncAnimation
+import math
+
+
+# Periodic table (first 20 elements for simplicity)
+ELEMENTS = {
+    1: "Hydrogen", 2: "Helium", 3: "Lithium", 4: "Beryllium",
+    5: "Boron", 6: "Carbon", 7: "Nitrogen", 8: "Oxygen",
+    9: "Fluorine", 10: "Neon", 11: "Sodium", 12: "Magnesium",
+    13: "Aluminum", 14: "Silicon", 15: "Phosphorus", 16: "Sulfur",
+    17: "Chlorine", 18: "Argon", 19: "Potassium", 20: "Calcium"
+}
+
+
+def get_element_name(protons):
+    return ELEMENTS.get(protons, f"Element {protons}")
+
+
+def create_atom(protons, neutrons, electrons):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.set_xlim(-6, 6)
+    ax.set_ylim(-6, 6)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_facecolor('#0a0a1a')
+    fig.patch.set_facecolor('#0a0a1a')
+
+
+    # Title
+    name = get_element_name(protons)
+    charge = protons - electrons
+    charge_str = ""
+    if charge > 0:
+        charge_str = f"  ({charge}+ ion)"
+    elif charge < 0:
+        charge_str = f"  ({abs(charge)}- ion)"
+
+
+    title = f"{name} Atom{charge_str}\nProtons: {protons}  |  Neutrons: {neutrons}  |  Electrons: {electrons}"
+    ax.set_title(title, color='white', fontsize=16, pad=20)
+
+
+    # Nucleus
+    nucleus = plt.Circle((0, 0), 0.6, color='#ff4444', zorder=10)
+    ax.add_patch(nucleus)
+    ax.text(0, 0, f"p⁺{protons}\nn⁰{neutrons}", ha='center', va='center',
+            color='white', fontsize=9, fontweight='bold', zorder=11)
+
+
+    # Electron shells (Bohr model)
+    shells = [2, 8, 8, 18, 18, 32]  # max electrons per shell
+    remaining = electrons
+    shell_radii = [1.5, 2.5, 3.5, 4.5, 5.3]
+
+
+    colors = ['#00ffcc', '#00ccff', '#66ff66', '#ffaa00', '#ff66cc']
+
+
+    for i, (max_e, radius) in enumerate(zip(shells, shell_radii)):
+        if remaining <= 0:
+            break
+
+
+        # Draw orbit
+        orbit = plt.Circle((0, 0), radius, fill=False, color='#444466',
+                           linewidth=1.5, linestyle='--', alpha=0.7)
+        ax.add_patch(orbit)
+
+
+        # Number of electrons in this shell
+        n_electrons = min(remaining, max_e)
+        remaining -= n_electrons
+
+
+        # Place electrons evenly around the circle
+        angles = np.linspace(0, 2*np.pi, n_electrons, endpoint=False)
+        for angle in angles:
+            x = radius * np.cos(angle)
+            y = radius * np.sin(angle)
+            electron = plt.Circle((x, y), 0.18, color=colors[i % len(colors)],
+                                  ec='white', linewidth=0.5, zorder=5)
+            ax.add_patch(electron)
+
+
+    # Legend
+    legend_text = (
+        "Red circle = Nucleus (protons + neutrons)\n"
+        "Colored dots = Electrons\n"
+        "Dashed rings = Electron shells"
+    )
+    ax.text(0, -5.5, legend_text, ha='center', va='top',
+            color='#aaaaaa', fontsize=10)
+
+
+    plt.tight_layout()
+    plt.show()
+
+
+# ========== Interactive Creator ==========
+def main():
+    print("=" * 50)
+    print("       ⚛️  ATOM CREATOR  ⚛️")
+    print("=" * 50)
+    print("Build any atom by choosing protons, neutrons & electrons!\n")
+
+
+    try:
+        protons = int(input("Number of protons (atomic number): "))
+        neutrons = int(input("Number of neutrons: "))
+        electrons = int(input("Number of electrons: "))
+
+
+        if protons < 1:
+            print("Protons must be at least 1!")
+            return
+
+
+        create_atom(protons, neutrons, electrons)
+
+
+        # Extra info
+        mass_number = protons + neutrons
+        print(f"\n✅ Created: {get_element_name(protons)}")
+        print(f"   Mass number: {mass_number}")
+        print(f"   Atomic number: {protons}")
+
+
+        if electrons == protons:
+            print("   → Neutral atom")
+        elif electrons < protons:
+            print(f"   → Cation (positive ion) with charge +{protons - electrons}")
+        else:
+            print(f"   → Anion (negative ion) with charge -{electrons - protons}")
+
+
+    except ValueError:
+        print("Please enter whole numbers only!")
+
+
+if __name__ == "__main__":
+    main()
